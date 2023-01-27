@@ -467,7 +467,7 @@ jobs:
             yum install -y nodejs
       - run:
           name: Store old WorkflowID in memstash for cleanup phase
-          working_directory: /.circleci/files
+          working_directory: ./.circleci/files
           command: |
             WorkflowID=$(aws cloudformation \
             list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
@@ -475,7 +475,7 @@ jobs:
             curl https://kvdb.io/GRkThmKJMbL9eTWpBLPotj/workflowid  -d "${WorkflowID}"
       - run:
           name: Update cloudfront distribution
-          #working_directory: ./.circleci/files
+          working_directory: ./.circleci/files
           command: |
              aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
