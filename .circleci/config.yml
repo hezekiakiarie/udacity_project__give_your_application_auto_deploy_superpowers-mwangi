@@ -165,24 +165,45 @@ jobs:
           workflow_id: "${CIRCLE_WORKFLOW_ID}"      
 
   configure-infrastructure:
-    docker:
-    - image: cimg/python:3.10
+    configure-infrastructure:
+    executor: python
+      
+    environment:
+          NODE_ENV: "local"
+          VERSION: "1"
+          ENVIRONMENT: "production"
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
     steps:
-    - checkout
-    # - install_ansible
-    # - install_awscli
-    - add_ssh_keys:
-       fingerprints: ["d5:a4:0d:bd:36:a7:d2:03:2c:10:93:6a:7c:d1:a7:26"]
-    - attach_workspace:
-        at: ~/
-    - run:
-       name: Run Configure Server Ansible play
-       command: |
-         cd .circleci/ansible
-         cat inventory.txt
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "81:fc:3a:b5:d4:68:fb:99:89:9d:33:5a:ce:90:27:fc"
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update --no-cache tar gzip ansible aws-cli
+            apk add --update ansible
+            ansible --version
+      - run:
+          name: Configure server
+          working_directory: ./.circleci/ansible
+          command: |
+            cat inventory.txt
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook -i inventory.txt configure-server.yml
+      - destroy_environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
 
-         ansible-playbook -i inventory.txt configure-server.yml
-    - destroy-environment      
+    
 
   run-migrations:
     docker:
