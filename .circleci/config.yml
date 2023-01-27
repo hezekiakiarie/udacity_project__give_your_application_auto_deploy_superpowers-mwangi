@@ -431,7 +431,7 @@ jobs:
             echo $backend_url
             echo "$backend_url/api/status"
             curl "$backend_url/api/status"
-            if curl "$backend_url/api/status" | grep "ok"
+            if curl "$backend_url" | grep "ok"
             then
               exit 0
             else
