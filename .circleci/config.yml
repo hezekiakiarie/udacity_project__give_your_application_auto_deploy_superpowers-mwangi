@@ -341,10 +341,9 @@ jobs:
             --output text)
             API_URL=$(curl --insecure  https://kvdb.io/GRkThmKJMbL9eTWpBLPotj/backend_url)
             echo "${API_URL}"
-            #echo "NODE_ENV=production" >> frontend/.env
-            #echo "API_URL=${API_URL}" >> frontend/.env
-            #cat .env
-            #API_URL=http://$BACKEND_PUBLIC_IP:3030
+            echo "NODE_ENV=production" >> env
+            echo "API_URL=${API_URL}" >> env
+            cat env
       - run:
           name: Deploy frontend objects to S3
           working_directory: ./frontend
@@ -426,13 +425,17 @@ jobs:
           name: Backend smoke test.
           working_directory: ./backend
           command: |
-            API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
-            if curl "${API_URL}/api/status" | grep "ok"
+            ls 
+            pwd
+            export backend_url=$(curl --insecure  https://kvdb.io/GRkThmKJMbL9eTWpBLPotj/backend_url)
+            echo $backend_url
+            echo "$backend_url/api/status"
+            curl "$backend_url/api/status"
+            if curl "$backend_url/api/status" | grep "ok"
             then
-            return 0
+              exit 0
             else
-            return 0
+              exit 1
             fi
       - run:
           name: Frontend smoke test.
