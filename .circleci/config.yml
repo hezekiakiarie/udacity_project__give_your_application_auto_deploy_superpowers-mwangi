@@ -165,10 +165,42 @@ jobs:
           workflow_id: "${CIRCLE_WORKFLOW_ID}"      
 
   configure-infrastructure:
-    configure-infrastructure:
-    executor: python
-      
-    environment:
+    docker:
+    - image: python:3.7-alpine3.11
+    steps:
+    - checkout 
+    - add_ssh_keys:
+        fingerprints: ["81:fc:3a:b5:d4:68:fb:99:89:9d:33:5a:ce:90:27:fc"] 
+              
+    - attach_workspace:
+        at: ~/
+    - restore_cache:
+        keys: [backend-build]
+    - run: 
+        name: Install dependencies
+        command: |
+          apk add --update ansible # install the dependencies needed
+    - run: 
+        name: Configure server
+        command: |
+          pwd
+          cat .circleci/ansible/inventory.txt
+
+          # echo ENVIRONMENT=production > "backend/.env"
+          # ls
+          # echo - TYPEORM_CONNECTION: "{{ lookup('env','TYPEORM_CONNECTION') }}"
+          # echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+          # echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+          # echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+          # echo NODE_ENV=production >> "backend/.env"
+
+          # echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+          # echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+          # echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+          # echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+          # echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+
+        environment:
           NODE_ENV: "local"
           VERSION: "1"
           ENVIRONMENT: "production"
@@ -179,32 +211,21 @@ jobs:
           TYPEORM_DATABASE: $TYPEORM_DATABASE
           TYPEORM_PORT: $TYPEORM_PORT
           TYPEORM_ENTITIES: $TYPEORM_ENTITIES
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints:
-            - "81:fc:3a:b5:d4:68:fb:99:89:9d:33:5a:ce:90:27:fc"
-      - attach_workspace:
-          at: .
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update --no-cache tar gzip ansible aws-cli
-            apk add --update ansible
-            ansible --version
-      - run:
-          name: Configure server
-          working_directory: ./.circleci/ansible
-          command: |
-            cat inventory.txt
-            export ANSIBLE_HOST_KEY_CHECKING=False
-            ansible-playbook -i inventory.txt configure-server.yml
-      # - destroy_environment:
-      #     id: ${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_fail
-
+          ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
+          cat backend/.env
+          ls backend
+    - run:
+        name: Install AWS CLI for rollback
+        when: on_fail
+        command: |
+          apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli
+    - persist_to_workspace:
+        root: ~/
+        paths:
+          - project/backend
+    - destroy-environment:
+        workflow_id: "${CIRCLE_WORKFLOW_ID}"    
     
-
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
