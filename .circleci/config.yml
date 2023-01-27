@@ -473,7 +473,7 @@ jobs:
             curl https://kvdb.io/GRkThmKJMbL9eTWpBLPotj/workflowid  -d "${WorkflowID}"
       - run:
           name: Update cloudfront distribution
-          working_directory: ./.circleci/files
+          #working_directory: ./.circleci/files
           command: |
              aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
