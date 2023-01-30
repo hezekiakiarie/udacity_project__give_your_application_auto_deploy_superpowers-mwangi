@@ -1,6 +1,9 @@
 https://github.com/hezekiakiarie/udacity_project__give_your_application_auto_deploy_superpowers-mwangi
 
 
-https://d128x525uim0ki.cloudfront.net
+https://d39h892jcq0177.cloudfront.net
+
+
+http://udapeople-9a60af4.s3-website-us-east-1.amazonaws.com
 
 
